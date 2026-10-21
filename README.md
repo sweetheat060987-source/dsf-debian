@@ -1,61 +1,70 @@
 # Ubuntu Package for diff-so-fancy
 
-This repository holds the `debian/` files responsible for packaging
+This repository builds Ubuntu source packages for
 [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy).
+Launchpad builds the binary packages for the
+[PPA](https://launchpad.net/~aos1/+archive/ubuntu/diff-so-fancy).
 
 ## Installation
 
-To use this package:
-```
+```sh
 sudo add-apt-repository ppa:aos1/diff-so-fancy
 sudo apt update
 sudo apt install diff-so-fancy
 ```
 
-## Technical Details
+## Build a source package
 
-The PPA can be [found here](https://launchpad.net/~aos1/+archive/ubuntu/diff-so-fancy).
+Requirements:
 
-This package uses the overlay method with `git-buildpackage`. That is, this
-package only holds the `debian` directory, downloads the release tarball,
-overlays the `debian` directory, and creates the package.
+- Docker
+- Nix, or `devscripts`, `gnupg`, and `dput` installed on the host
+- A signing key registered with your Launchpad account
 
-### Requirements
-
-In order to build this package you will need the following packages:
-
-- `sbuild` (https://wiki.debian.org/sbuild)
-- `git-buildpackage`
-
-### New Release Usage (Ubuntu)
-
-1. Make necessary directories if they don't exist:
-```
-$ mkdir tarballs build
-```
-2. Download latest release with `uscan --destdir tarballs`
-   (This might be broken, you can instead download the release tarball and
-   rename it to the appropriate name.)
-3. Make changes if necessary, and run `gbp dch`
-4. Run:
-```
-$ gbp buildpackage --git-builder="sbuild --source-only-changes --debbuildopts='--buildinfo-option=-O'"
+```sh
+nix develop
 ```
 
-This will create a `source-only package`, and not write-out the `.buildinfo`
-(`-O`) flag. It also uses `sbuild` to make the package.
-(See https://bugs.launchpad.net/launchpad/+bug/1699763)
+The shell uses your existing host GPG keyring. Docker must be installed and
+running separately.
 
-5. Upload the changes file to PPA:
-```
-$ dput ppa:aos1/diff-so-fancy build/diff-so-fancy_1.2.6-1ubuntu1_source.changes
-```
+1. Update `debian/changelog` with the upstream version, a new package revision,
+   and the target Ubuntu series. For example:
 
-### Create Binary Packages (`.deb`)
+   ```sh
+   dch --newversion 1.4.4-1ubuntu2~noble1 --distribution noble "Rebuild for Noble."
+   ```
 
-Follow steps 1 - 3 above. Then, run this command instead:
-```
-$ gbp buildpackage --git-builder=sbuild
-```
+   The existing changelog targets `bionic`. Change it before publishing to a
+   different series. Use distinct package versions for uploads to different
+   series; never reuse an already published version.
 
-All other configuration is stored under `debian/gbp.conf`.
+2. Build the unsigned source package:
+
+   ```sh
+   ./build.sh
+   ```
+
+   The default image is `ubuntu:24.04` (Noble). Select another image to match
+   your target series:
+
+   ```sh
+   ./build.sh -i docker.io/library/ubuntu:22.04
+   ```
+
+   The image does not change the changelog's target series or version.
+   The build downloads the exact upstream version from the changelog, caches
+   its original tarball in `tarballs/`, and overlays `debian/`. Source artifacts
+   go into `build/`, owned by the output directory's owner.
+
+3. Sign on the host using your primary key fingerprint:
+
+   ```sh
+   debsign -kYOUR_FINGERPRINT build/diff-so-fancy_1.4.4-1ubuntu2~noble1_source.changes
+   ```
+
+4. Upload the signed source package:
+
+   ```sh
+   dput ppa:aos1/diff-so-fancy build/diff-so-fancy_1.4.4-1ubuntu2~noble1_source.changes
+   ```

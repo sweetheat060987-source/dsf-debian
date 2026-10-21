@@ -1,5 +1,5 @@
 diff-so-fancy for Debian
 ------------------------
-I converted the original README.md file into a manpage.
+The package installs the upstream manpage from docs/diff-so-fancy.1.
 
  -- Aos Dabbagh <aosdab@gmail.com>, Sun, 29 Mar 2020 11:28:27 -0400

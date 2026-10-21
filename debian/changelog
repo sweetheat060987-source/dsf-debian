@@ -1,3 +1,13 @@
+diff-so-fancy (1.4.14-1ubuntu1) resolute; urgency=medium
+
+  [ Aos Dabbagh ]
+  * Update to 1.4.14
+  * Add support for resolute
+  * Install the upstream manpage instead of the local README conversion
+  * Disable automatic Makefile targets for the unbundled Perl package
+
+ -- Aos Dabbagh <aosdab@gmail.com>  Tue, 20 Oct 2026 22:28:06 -0400
+
 diff-so-fancy (1.4.4-1ubuntu1) bionic; urgency=medium
 
   [ Daniel Snider ]
